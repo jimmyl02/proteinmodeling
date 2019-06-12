@@ -15,7 +15,7 @@ HYPERPARAMETERS
 
 kClosestAtoms = 10
 distanceTestRadius = 100
-atomicDistanceTolerance = 0.1 #Default: 0.01 for extremely exact match
+atomicDistanceTolerance = 0.5 #Default: 0.5 for general similarity
 atomicAngleTolerance = 0.1
 
 """
@@ -343,7 +343,8 @@ pdbToData("C:\\proj\\proteinModelling\\motifSearching\\1aay.pdb", "C:\\proj\\pro
 #Example with 1aay
 
 #Example 1 residue for 1aay
-#list_res = [("CYS", "A", 165), ("CYS", "A", 168), ("HIS", "A", 181), ("HIS", "A", 185)]
+list_res = [("CYS", "A", 165), ("CYS", "A", 168), ("HIS", "A", 181), ("HIS", "A", 185)]
+list_res = [("HIS", "B", 10), ("HIS", "F", 10), ("HIS", "J", 10)]
 #Example 2 residue for 1aay
 #list_res = [("CYS", "A", 107), ("CYS", "A", 112), ("HIS", "A", 125), ("HIS", "A", 129)]                        
 #Example 3 residue for 1aay
@@ -351,7 +352,7 @@ pdbToData("C:\\proj\\proteinModelling\\motifSearching\\1aay.pdb", "C:\\proj\\pro
 
 #Generate template for the third zinc finger of protein 1aay
 
-#template = getTemplate("C:\\proj\\proteinModelling\\motifSearching\\1aay_formatted.data", list_res, "|")
+template = getTemplate("C:\\proj\\proteinModelling\\motifSearching\\2aiy_formatted.data", list_res, "|")
 
 #Generate important center atoms using anem and distance check
 
@@ -361,8 +362,8 @@ pdbToData("C:\\proj\\proteinModelling\\motifSearching\\1aay.pdb", "C:\\proj\\pro
 
 #Example with 4aiy
 
-#pdbToData("C:\\proj\\proteinModelling\\motifSearching\\4aiy.pdb", "C:\\proj\\proteinModelling\\motifSearching\\4aiy_formatted.data")
-list_res = [("HIS", "B", 10), ("HIS", "F", 10), ("HIS", "J", 10)]
-template = getTemplate("C:\\proj\\proteinModelling\\motifSearching\\4aiy_formatted.data", list_res, "|")
-protein = getProtein("C:\\proj\\proteinModelling\\motifSearching\\4aiy_formatted.data", "|")
+#pdbToData("C:\\proj\\proteinModelling\\motifSearching\\1aay.pdb", "C:\\proj\\proteinModelling\\motifSearching\\1aay_formatted.data")
+#list_res = [("HIS", "B", 10), ("HIS", "F", 10), ("HIS", "J", 10)]
+#template = getTemplate("C:\\proj\\proteinModelling\\motifSearching\\4aiy_formatted.data", list_res, "|")
+protein = getProtein("C:\\proj\\proteinModelling\\motifSearching\\1qjo_formatted.data", "|")
 importantCenters = getImportantCenterAtomsNamesAndDist(protein, template)
