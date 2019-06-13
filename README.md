@@ -11,6 +11,7 @@ This is a program which uses a known motif on a certain protein and attempts to 
 
  - 3D template matching wtih eigenspaces
  - Utilizing angle between atoms to reduce search space
+ - 3D bounding boxes using all data from PDBSITE and a 3D CNN
 
 ## Usage
 
