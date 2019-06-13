@@ -9,10 +9,12 @@ This is a program which uses a known motif on a certain protein and attempts to 
 ![Graphic explaining distance matching](https://i.ibb.co/Lv3Bqsj/distance-And-Name-Matching-Graphical.png)
 ## Methods to explore
 
- - 3d template matching wtih eigenspaces
+ - 3D template matching wtih eigenspaces
  - Utilizing angle between atoms to reduce search space
 
 ## Usage
+
+NOTE:The **proteinModel<span></span>.py** file should not be modified unless attempting to change how the program works
 
 The main file is **proteinModel<span></span>.py** which contains all methods and code needed to load a template from a protein. The functions are documented within the file. An example of using the MAN binding site on protein with PDBID 2CIX can be found in the **exManBinding<span></span>.py** file and shows how the config options are set and how to load and use data. In the example, the template from 2CIX is attempted to match and find all sites on 2CJ2. 
 
@@ -23,3 +25,23 @@ The following is an explanation of the hyperparameters to be set in the config f
  - atomicDistanceTolerance - How different the distance from a possible center atom can be compared to the template information
  - atomicAngleTolerance (To be implemented) - How different the angle from a possible center atom can be compared to the template information
 
+## Examples
+
+### 2CIX and 2CJ2 for MAN binding sites
+
+The code for the visualization can be found in **dataVisualizer<span></span>.py**
+
+The following is the data extracted from a comparison between proteins with pdbID 2CIX and 2CJ2 with the template extracted from 2CIX.
+
+Here is the protein with each individual atom graphed
+
+![Protein atoms plotted](https://i.ibb.co/j4Ghpts/protein2-CJ2.png)
+
+Here are the important center atoms deemed with an atomic distance tolerance of 0.1 graphed with matplot3D
+
+![Plotted important centers of 2CJ2](https://i.ibb.co/0tkXTpD/important-Centers2-CJ2.png)
+
+Here are the known point clouds of functional sites for MAN binding plotted in colors along with the predicted important center atoms
+NOTE: There are more MAN binding sites, included are only four examples
+
+![Point clouds and predicted sites plotted](https://i.ibb.co/nkhm5qq/important-Centers-And-Point-Clouds.png)
