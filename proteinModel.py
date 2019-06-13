@@ -8,15 +8,28 @@ Created on Mon Jun 10 09:04:00 2019
 import sys
 import re
 import math
+from configparser import ConfigParser
 
 """
 HYPERPARAMETERS
 """
 
-kClosestAtoms = 10
-distanceTestRadius = 100
-atomicDistanceTolerance = 0.5 #Default: 0.5 for general similarity
-atomicAngleTolerance = 0.1
+config = ConfigParser()
+config.read("config.ini")
+if len(config.sections()) == 0:
+    config.add_section("proteinModel")
+    config.set("proteinModel", "kClosestAtoms", "10")
+    config.set("proteinModel", "distanceTestRadius", "100")
+    config.set("proteinModel", "atomicDistanceTolerance", "0.5") #Default: 0.5 for general similarity
+    config.set("proteinModel", "atomicAngleTolerance", "0.1")
+    
+    with open("config.ini", "w") as f:
+        config.write(f)
+
+kClosestAtoms = int(config.get("proteinModel", "kClosestAtoms"))
+distanceTestRadius = int(config.get("proteinModel", "distanceTestRadius"))
+atomicDistanceTolerance = float(config.get("proteinModel", "atomicDistanceTolerance"))
+atomicAngleTolerance = float(config.get("proteinModel", "atomicAngleTolerance"))
 
 """
 SECTION
@@ -56,6 +69,26 @@ def pdbToData(in_file_path, out_file_path):
     with open(out_file_path, "w") as f:
         
         f.write(toWriteString)
+
+"""
+Name: reloadGlobalValues
+Description: Forces a reloading of the global values by reading the config
+"""
+
+def reloadGlobalValues():
+    
+    configLocal = ConfigParser()
+    configLocal.read("config.ini")
+    
+    global kClosestAtoms
+    global distanceTestRadius
+    global atomicDistanceTolerance
+    global atomicAngleTolerance
+    
+    kClosestAtoms = int(configLocal.get("proteinModel", "kClosestAtoms"))
+    distanceTestRadius = int(configLocal.get("proteinModel", "distanceTestRadius"))
+    atomicDistanceTolerance = float(configLocal.get("proteinModel", "atomicDistanceTolerance"))
+    atomicAngleTolerance = float(configLocal.get("proteinModel", "atomicAngleTolerance"))
 
 """
 SECTION
@@ -258,6 +291,8 @@ Input: protein [(aName, x, y, z)], template (center atom tupple, [atom tupple])
 
 def getImportantCenterAtomsNamesAndDist(protein, template):
     
+    reloadGlobalValues()
+    
     possibleCenterAtoms = [] #Format: [((atomic name, x, y, z), confidence)]
     counter = 0
     
@@ -310,7 +345,7 @@ def getImportantCenterAtomsNamesAndDist(protein, template):
                         #Test the j next atoms in the list to see if distance match
                         
                         proteinPosition += 1
-                        #TODO Add difference to threshold tracker if successful and return probabiliy with center
+                        
                         if abs(atomDist[proteinPosition][1] - requiredNextDistance) < atomicDistanceTolerance and atomDist[proteinPosition][0] == template[1][i][0]:
                             
                             #Increase the value to use to calculate threshold
@@ -330,40 +365,3 @@ def getImportantCenterAtomsNamesAndDist(protein, template):
                 #If the (i-1)th atom is being checked and the resultis that inside loop is true, then add this to possible along with confidence
                 
     return possibleCenterAtoms
-
-"""
-USAGE AREA
-"""
-
-#Generate data file for protein 1aay
-"""
-pdbToData("C:\\proj\\proteinModelling\\motifSearching\\1aay.pdb", "C:\\proj\\proteinModelling\\motifSearching\\1aay_formatted.data")
-"""
-
-#Example with 1aay
-
-#Example 1 residue for 1aay
-list_res = [("CYS", "A", 165), ("CYS", "A", 168), ("HIS", "A", 181), ("HIS", "A", 185)]
-list_res = [("HIS", "B", 10), ("HIS", "F", 10), ("HIS", "J", 10)]
-#Example 2 residue for 1aay
-#list_res = [("CYS", "A", 107), ("CYS", "A", 112), ("HIS", "A", 125), ("HIS", "A", 129)]                        
-#Example 3 residue for 1aay
-#list_res = [("CYS", "A", 137), ("CYS", "A", 140), ("HIS", "A", 153), ("HIS", "A", 157)]                        
-
-#Generate template for the third zinc finger of protein 1aay
-
-template = getTemplate("C:\\proj\\proteinModelling\\motifSearching\\2aiy_formatted.data", list_res, "|")
-
-#Generate important center atoms using anem and distance check
-
-#protein = getProtein("C:\\proj\\proteinModelling\\motifSearching\\1aay_formatted.data", "|")
-
-#importantCenters = getImportantCenterAtomsNamesAndDist(protein, template)
-
-#Example with 4aiy
-
-#pdbToData("C:\\proj\\proteinModelling\\motifSearching\\1aay.pdb", "C:\\proj\\proteinModelling\\motifSearching\\1aay_formatted.data")
-#list_res = [("HIS", "B", 10), ("HIS", "F", 10), ("HIS", "J", 10)]
-#template = getTemplate("C:\\proj\\proteinModelling\\motifSearching\\4aiy_formatted.data", list_res, "|")
-protein = getProtein("C:\\proj\\proteinModelling\\motifSearching\\1qjo_formatted.data", "|")
-importantCenters = getImportantCenterAtomsNamesAndDist(protein, template)
