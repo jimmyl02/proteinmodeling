@@ -43,7 +43,8 @@ Description: Takes a pdb file as input and converts it to a usable form
 Input: input file path, output file path
 """
 #match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s{2}(\S{1,3})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?")
-match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s+(\S{1,4})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?")
+#match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s+(\S{1,4})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?")
+match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s+(\S{1,4})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d{0,2})?\s*(\-?[0-9]\d{0,2}\.\d*)?")
 
 def pdbToData(in_file_path, out_file_path):
     
