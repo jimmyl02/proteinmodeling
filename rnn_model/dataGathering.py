@@ -10,6 +10,7 @@ import glob
 import re
 import requests
 import pandas as pd
+import numpy as np
 
 """
 FUNCTION
@@ -111,7 +112,7 @@ def generateBaseAndMetaData(list_pdbid_files):
         
         with open(r"./training_data/" + str(pdbID) + "_meta.txt", "w") as f:
             
-            f.write("x_shift: " + str(xShift) + "\ny_shift: " + str(yShift) + "\nz_shift: " + str(zShift) + "\n")
+            f.write(str(xShift) + "|" + str(yShift) + "|" + str(zShift))
         
         for i in range(len(atomX)):
             
@@ -141,28 +142,60 @@ Name: generateDataPerPDB
 Description: Fill out the known information into the csv, replacing old values
 """
                         
-def generateDataPerPDB(data_file, list_pdb_name):
+def generateDataPerPDB(data_file, label_name):
+    
+    match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s+(\S{1,4})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d{0,2})?\s*(\-?[0-9]\d{0,2}\.\d*)?", re.MULTILINE)
     
     with open(data_file, "r") as data_file_content:
         
         sections = data_file_content.read().split("\n\n")
         
+        currIndex = 0
+        
         for section in sections:
+            
+            currIndex += 1
             
             pdbIdRegex = re.compile("^PDBID (.*)$", re.MULTILINE)
             pdbIdSearch = pdbIdRegex.findall(section)
             
             if pdbIdSearch:
                 
-                pdbId = pdbIdSearch[0]
+                pdbID = pdbIdSearch[0]
                 
-                if not path.exists(r"./training_data/" + str(pdbId) + "_data.csv"):
+                if not path.exists(r"./training_data/" + str(pdbID) + "_data.csv"):
                     
-                    print("WARNING: Need to download " + str(pdbId))
+                    print("WARNING: Need to download " + str(pdbID))
                     
                     continue
             
-            
+                # We now have the PDBID of the section and must extract the atom info to exchange. Must use metadata
+                
+                data = pd.read_csv("./training_data/" + str(pdbID) + "_data.csv")
+                
+                match_list = match_pattern.findall(section)
+                
+                with open("./training_data/" + str(pdbID) + "_meta.txt") as metadata_file:
+                    
+                    metadataInfo = metadata_file.read().split("|")
+                    
+                    xShift = float(metadataInfo[0])
+                    yShift = float(metadataInfo[1])
+                    zShift = float(metadataInfo[2])
+                    
+                    for match in match_list:
+                        
+                        shiftedX = float(match[4]) + xShift
+                        shiftedY = float(match[5]) + yShift
+                        shiftedZ = float(match[6]) + zShift
+                        
+                        data.loc[np.isclose(data["atom_x"], shiftedX) & np.isclose(data["atom_y"], shiftedY) & np.isclose(data["atom_z"], shiftedZ), ["label"]] = label_name
+                    
+                data.to_csv("./training_data/" + str(pdbID) + "_data.csv", index=False)
+                
+                if currIndex % 10 == 0:
+                    print("Complete with [" + str(currIndex) + "/" + str(len(sections)) + "] sections")
+                        
 #downloadRequiredPDB("./manBindingSites.txt")
 
 # Steps to get all downloaded pdb files            
@@ -174,4 +207,4 @@ for file in glob.glob("./pdbdata/*"):
 # Use generated list to call generateMetaData
 generateBaseAndMetaData(list_pdbId)
 
-generateDataPerPDB("./manBindingSites.txt", list_pdbId)
+generateDataPerPDB("./manBindingSites.txt", "MAN")
