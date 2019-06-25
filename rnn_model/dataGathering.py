@@ -45,17 +45,17 @@ def downloadRequiredPDB(input_file):
                         
 """
 FUNCTION
-Name: generateBaseData
-Description: Create the base csv file with all information and moves the most negative to left coordinate
+Name: generateBaseAndMetaData
+Description: Create the base csv file with all information and moves the most negative to left coordinate. Also creates metadata file
 """
 
-def generateBaseData(list_pdbid_files):
+def generateBaseAndMetaData(list_pdbid_files):
     
     for pdbID in list_pdbid_files:
         
         if not path.exists(r"./pdbdata/" + str(pdbID) + ".pdb"):
             
-            print("WARNING: The file " + str(pdbID) + ".pdb does not exist, meta data not being generated")
+            print("WARNING: The file " + str(pdbID) + ".pdb does not exist, base data not being generated")
             
             continue
         
@@ -69,10 +69,15 @@ def generateBaseData(list_pdbid_files):
         tempFac = []
         label = []
         
+        # Variables to store the metadata
+        xShift = 100000.0
+        yShift = 100000.0
+        zShift = 100000.0
+        
         
         with open(r"./pdbdata/" + str(pdbID) + ".pdb", "r") as f:
             
-            match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s+(\S{1,4})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?\s+(\-?[0-9]\d{0,2}\.\d*)?")
+            match_pattern = re.compile("^ATOM\s{2,6}\d{1,5}\s+(\S{1,4})\s+([A-Z]{1,4})\s([\s\w])\s+(\d+)\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d*)?\s*(\-?[0-9]\d{0,2}\.\d{0,2})?\s*(\-?[0-9]\d{0,2}\.\d*)?")
             
             for line in f.read().splitlines():
                 
@@ -83,16 +88,36 @@ def generateBaseData(list_pdbid_files):
                 match_list=match_pattern.findall(line)
                 
                 if match_list:
-                    
+
                     completeMol.append(match_list[0][0])
                     resName.append(match_list[0][1])
-                    resNum.append(match_list[0][3])
-                    atomX.append(match_list[0][4])
-                    atomY.append(match_list[0][5])
-                    atomZ.append(match_list[0][6])
+                    resNum.append(int(match_list[0][3]))
+                    atomX.append(float(match_list[0][4]))
+                    atomY.append(float(match_list[0][5]))
+                    atomZ.append(float(match_list[0][6]))
                     occupancy.append(match_list[0][7])
-                    tempFac.append(match_list[0][8])
+                    tempFac.append(float(match_list[0][8]))
                     label.append("Other")
+                    
+                    xShift = min(xShift, float(match_list[0][4]))
+                    yShift = min(yShift, float(match_list[0][5]))
+                    zShift = min(zShift, float(match_list[0][6]))
+                    
+        xShift *= -1
+        yShift *= -1
+        zShift *= -1
+        
+        # Save meta data
+        
+        with open(r"./training_data/" + str(pdbID) + "_meta.txt", "w") as f:
+            
+            f.write("x_shift: " + str(xShift) + "\ny_shift: " + str(yShift) + "\nz_shift: " + str(zShift) + "\n")
+        
+        for i in range(len(atomX)):
+            
+            atomX[i] += xShift
+            atomY[i] += yShift
+            atomZ[i] += zShift
                         
         raw_data = {"mol_name": completeMol,
                     "res_name": resName,
@@ -109,22 +134,6 @@ def generateBaseData(list_pdbid_files):
         df = pd.DataFrame(raw_data, columns = ["mol_name", "res_name", "res_num", "atom_x", "atom_y", "atom_z", "occupancy", "temp_fac", "label"])
         df.to_csv(r"./training_data/" + str(pdbID) + "_data.csv", index=False)
         del df
-
-"""
-FUNCTION
-Name: generateMetaData
-Description: Generate meta-data for each pdb file inputted and store it
-"""
-
-def generateMetaData(list_pdbid_files):
-    
-    for pdbId in list_pdbid_files:
-        
-        #TEMP, NEED TO DECIDE WHAT META DATA IS NEEDED
-        #Currently have
-        # pdbId, xShift, yShift, zShift
-        
-        print("TODO")
 
 """
 FUNCTION
@@ -147,8 +156,6 @@ def generateDataPerPDB(data_file, list_pdb_name):
                 
                 pdbId = pdbIdSearch[0]
                 
-                print(pdbId)
-                
                 if not path.exists(r"./training_data/" + str(pdbId) + "_data.csv"):
                     
                     print("WARNING: Need to download " + str(pdbId))
@@ -165,8 +172,6 @@ for file in glob.glob("./pdbdata/*"):
     list_pdbId.append(pdbFileMatch.findall(file)[0])
     
 # Use generated list to call generateMetaData
-#generateBaseData(list_pdbId)
-    
-#generateMetaData(list_pdbId)
-            
+generateBaseAndMetaData(list_pdbId)
+
 generateDataPerPDB("./manBindingSites.txt", list_pdbId)
