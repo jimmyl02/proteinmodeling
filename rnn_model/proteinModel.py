@@ -195,25 +195,28 @@ class RNNWithEmbed(nn.Module):
         self.hidden_size = hidden_size
         self.num_lstm_layers = num_lstm_layers
         
-        self.lstm = nn.LSTM(input_size, hidden_size, num_lstm_layers, batch_first=True)
+        self.lstm = nn.LSTM(22, hidden_size, num_lstm_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, num_classes)
         
     def forward(self, categorical_data, continuous_data):
         
+        # First add a third dimension to the categorical_data tensor
+        categorical_data = categorical_data.unsqueeze(-1)
+        
         # Categorical features are put in their own embedding layers which are concat at w/ continuous features
         
-        embedData = [emb_layer(categorical_data[i, :]) for i, emb_layer in enumerate(self.emb_layers)]
+        embedData = [emb_layer(categorical_data[:, :, i]) for i, emb_layer in enumerate(self.emb_layers)]
         embedData = torch.cat(embedData, 1)
         embedData = self.emb_dropout_layer(embedData)
-        pdb.set_trace()
-        x = torch.cat([embedData, continuous_data], 1)
+        #pdb.set_trace()
+        x = torch.cat([embedData, continuous_data], 2)
         
         # Set initial hidden and cell states 
         h0 = torch.zeros(self.num_lstm_layers, x.size(0), self.hidden_size).to(device) 
         c0 = torch.zeros(self.num_lstm_layers, x.size(0), self.hidden_size).to(device)
         
         # Forward propagate LSTM
-        out, _ = self.lstm(x, (h0, c0)) # Output format: tensor (batch_size, seeq_len, hidden_size)
+        out, _ = self.lstm(x, (h0, c0)) # Output format: tensor (batch_size, seq_len, hidden_size)
         
         # Generate meaning from last time step
         out = self.fc(out[:, -1, :])
@@ -260,13 +263,13 @@ for epoch in range(num_epochs):
         
         # Forward pass
         outputs = model(features[:, :, 0].long(), features[:, :, 1:].float())
-        loss = loss_fn(outputs. labels)
+        loss = loss_fn(outputs, labels)
         
         # Backward pass and optimize
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
-        if (i + 1) % 5 == 0:
+        if (i + 1) % 25 == 0:
             
             print ("Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}" .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
