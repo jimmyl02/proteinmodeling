@@ -17,9 +17,6 @@ import torch
 import torch.utils.data
 import torch.nn as nn
 
-#DEBUG
-import pdb
-
 """
 SECTION
 Name: Definitions
@@ -33,7 +30,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 seed = 7
 np.random.seed(seed)
 
-num_epochs = 100
+num_epochs = 1
 num_classes = 2
 batch_size = 32
 learning_rate = 0.001
@@ -62,7 +59,7 @@ num_features = 4
 hidden_size = 60
 num_lstm_layers = 2
 emb_dropout= 0.2
-label_threshold = 0.20
+label_threshold = 0.025
 
 """
 SECTION
@@ -208,7 +205,7 @@ class RNNWithEmbed(nn.Module):
         embedData = [emb_layer(categorical_data[:, :, i]) for i, emb_layer in enumerate(self.emb_layers)]
         embedData = torch.cat(embedData, 1)
         embedData = self.emb_dropout_layer(embedData)
-        #pdb.set_trace()
+
         x = torch.cat([embedData, continuous_data], 2)
         
         # Set initial hidden and cell states 
@@ -273,3 +270,33 @@ for epoch in range(num_epochs):
         if (i + 1) % 25 == 0:
             
             print ("Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}" .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
+            
+"""
+SECTION
+Name: Verification testing of the model
+"""
+
+with torch.no_grad():
+    
+    correct = 0
+    total = 0
+    
+    for features, labels in test_loader:
+        
+        features = features.to(device)
+        labels = labels.type(torch.LongTensor)
+        labels = labels.to(device)
+        
+        # Forward pass
+        
+        outputs = model(features[:, :, 0].long(), features[:, :, 1:].float())
+        _, predicted = torch.max(outputs.data, 1)
+        
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+    print("Test Accuracy of the model on the data in the test_loader: {} %".format(100 * correct / total))
+    
+    # Save the model weights with information in name
+    
+    torch.save(model.state_dict(), "./protein_weights/verif_" + str(round(100 * correct / total, 3)) + "acc.pt")
